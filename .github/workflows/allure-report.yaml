@@ -1,9 +1,10 @@
-name: Allure Report
+name: Deploy Allure Report
 on:
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
+    branches: [main]
 
 permissions:
   contents: read
@@ -15,14 +16,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish-allure-report:
-    if: ${{ github.event.workflow_run.conclusion != 'skipped' }}
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}allure-report
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download Allure Report
+      - name: 📥 Download Allure Report Artifact
         uses: actions/download-artifact@v4
         with:
           name: allure-report
@@ -31,14 +32,14 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Setup Pages
+      - name: 🔧 Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload Allure Report to Pages
+      - name: 📤 Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./allure-report
 
-      - name: Deploy to GitHub Pages
+      - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
